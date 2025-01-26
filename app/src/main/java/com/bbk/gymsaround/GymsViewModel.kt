@@ -5,19 +5,26 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.create
 
 class GymsViewModel(
     private val stateHandle: SavedStateHandle
 ) : ViewModel() {
     var state by mutableStateOf(emptyList<Gym>())
     private var apiService: GymsApiService
-    private lateinit var gymsCall: Call<List<Gym>>
+
+    private val errorHandler = CoroutineExceptionHandler { _, throwable ->
+        throwable.printStackTrace()
+    }
+
+//    private val job = Job()
+//    private val scope = CoroutineScope(context = job + Dispatchers.IO)
 
     init {
         val retrofit: Retrofit = Retrofit.Builder()
@@ -35,25 +42,25 @@ class GymsViewModel(
     }
 
     private fun getGyms() {
-        gymsCall = apiService.getGyms()
-        gymsCall.enqueue(object : Callback<List<Gym>> {
-            override fun onResponse(call: Call<List<Gym>>, response: Response<List<Gym>>) {
-                response.body()?.let { gymsList ->
-                    state = gymsList.restoreSelectedGyms()
-                }
-            }
-
-            override fun onFailure(call: Call<List<Gym>>, t: Throwable) {
-                t.printStackTrace()
-            }
-
-        })
+//        scope.launch {
+        viewModelScope.launch(errorHandler) {
+            val gyms = getGymsFromRemoteDB()
+//            withContext(Dispatchers.Main) { // not needed now as we are already on Dispatchers.Main
+            state = gyms.restoreSelectedGyms()
+//            }
+        }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        gymsCall.cancel()
+    private suspend fun getGymsFromRemoteDB(): List<Gym> {
+        return withContext(Dispatchers.IO) { // can be omitted as retrofit already uses Dispatchers.IO
+            apiService.getGyms()
+        }
     }
+
+//    override fun onCleared() {
+//        super.onCleared()
+//        job.cancel()
+//    }
 
     fun toggleFavouriteState(gymId: Int) {
         val gyms = state.toMutableList()
