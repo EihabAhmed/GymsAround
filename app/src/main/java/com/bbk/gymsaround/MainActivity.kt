@@ -3,14 +3,13 @@ package com.bbk.gymsaround
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.bbk.gymsaround.ui.theme.GymsAroundTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,24 +18,36 @@ class MainActivity : ComponentActivity() {
 //        enableEdgeToEdge()
         setContent {
             GymsAroundTheme {
-                GymsScreen()
+                GymsAroundApp()
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+private fun GymsAroundApp() {
+    val navController = rememberNavController()
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    GymsAroundTheme {
-        Greeting("Android")
+    NavHost(navController = navController, startDestination = "gyms") {
+        composable(route = "gyms") {
+            GymsScreen { id ->
+                navController.navigate("gyms/$id")
+            }
+        }
+        composable(
+            route = "gyms/{gym_id}",
+            arguments = listOf(
+                navArgument("gym_id") {
+                    type = NavType.IntType
+                }
+            ),
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "https://www.gymsaround.com/details/{gym_id}"
+                }
+            )
+        ) {
+            GymDetailsScreen()
+        }
     }
 }
