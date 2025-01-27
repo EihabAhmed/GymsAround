@@ -17,10 +17,12 @@ class GymsViewModel(
     private val stateHandle: SavedStateHandle
 ) : ViewModel() {
     var state by mutableStateOf(emptyList<Gym>())
+    var networkAvailable by mutableStateOf(true)
     private var apiService: GymsApiService
 
     private val errorHandler = CoroutineExceptionHandler { _, throwable ->
         throwable.printStackTrace()
+        networkAvailable = false
     }
 
 //    private val job = Job()

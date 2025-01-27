@@ -2,8 +2,10 @@ package com.bbk.gymsaround
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -30,14 +32,26 @@ import com.bbk.gymsaround.ui.theme.Purple40
 fun GymsScreen(onItemClick: (Int) -> Unit) {
     val vm: GymsViewModel = viewModel()
 
-    LazyColumn {
-        items(vm.state) { gym ->
-            GymItem(
-                gym = gym,
-                onFavouriteIconClick = { vm.toggleFavouriteState(it) },
-                onItemClick = { id ->
-                    onItemClick(id)
-                }
+    if (vm.networkAvailable) {
+        LazyColumn {
+            items(vm.state) { gym ->
+                GymItem(
+                    gym = gym,
+                    onFavouriteIconClick = { vm.toggleFavouriteState(it) },
+                    onItemClick = { id ->
+                        onItemClick(id)
+                    }
+                )
+            }
+        }
+    } else {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Please check internet connection"
             )
         }
     }
